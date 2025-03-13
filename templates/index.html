@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Organizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+        }
+        .section {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .section h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+        .btn {
+            padding: 8px 15px;
+            margin-top: 10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .btn-upload {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-view {
+            background: #008CBA;
+            color: white;
+        }
+        .btn-download {
+            background: #f44336;
+            color: white;
+        }
+        .btn:hover {
+            opacity: 0.8;
+        }
+        input[type="file"] {
+            display: block;
+            margin: 10px auto;
+        }
+        .status {
+            font-size: 14px;
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PDF Organizer</h1>
+
+        {% for section in sections %}
+        <div class="section">
+            <h3>{{ section }} - Upload PDF</h3>
+            <input type="file" id="file-{{ section }}" accept=".pdf">
+            <button class="btn btn-upload" onclick="uploadFile('{{ section }}')">Upload</button>
+            <button class="btn btn-view" onclick="viewFile('{{ section }}')">View</button>
+            <p id="status-{{ section }}" class="status"></p>
+        </div>
+        {% endfor %}
+
+        <div class="section">
+            <h2>Download All PDFs</h2>
+            <button class="btn btn-download" onclick="convertAndDownloadZip()">Download ZIP</button>
+        </div>
+    </div>
+
+    <script>
+        async function uploadFile(section) {
+            const fileInput = document.getElementById(`file-${section}`).files[0];
+            const statusText = document.getElementById(`status-${section}`);
+
+            if (!fileInput) {
+                alert('Please select a PDF file to upload.');
+                return;
+            }
+
+            statusText.textContent = "Uploading...";
+            const formData = new FormData();
+            formData.append('file', fileInput);
+
+            try {
+                const response = await fetch(`/upload/${section}`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    statusText.style.color = "green";
+                    statusText.textContent = "Upload successful!";
+                } else {
+                    statusText.style.color = "red";
+                    statusText.textContent = result.error || "Upload failed.";
+                }
+            } catch (error) {
+                statusText.style.color = "red";
+                statusText.textContent = "Error uploading file.";
+            }
+        }
+
+        function viewFile(section) {
+            window.open(`/view/${section}`, '_blank');
+        }
+
+        function convertAndDownloadZip() {
+            window.location.href = `/convert-and-download-zip`;
+        }
+    </script>
+</body>
+</html>
